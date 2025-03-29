@@ -1,0 +1,50 @@
+{% extends "dashboard/dashboard.html" %}
+{% block title %}Manager Dashboard{% endblock title %}
+{% block tasks %}
+<!-- Task Table  -->
+<div class="bg-white rounded-xl shadow-sm mb-11">
+    <div
+      class="grid grid-cols-4 p-4 border-b border-gray-100 text-sm text-gray-500"
+    >
+      <div>TASK TITLE</div>
+      <div>PRIORITY</div>
+      <div>TEAM</div>
+      <div>CREATED AT</div>
+    </div>
+    <!-- Task Items  -->
+    <div class="divide-y divide-gray-100">
+     {% for task in tasks %}
+       <!-- Task 1 -->
+       <div class="grid grid-cols-4 gap-4 p-4 items-center">
+        <div class="flex items-center gap-2">
+          <div class="w-2 h-2 rounded-full bg-green-500"></div>
+          <a href="{% url 'task-details' task.id %}">{{task.title}}</a>
+          <a href='{% url "update-task" task.id %}' class="px-2 py-1 bg-green-500">Edit</a>
+          <form action='{% url "delete-task" task.id %}' method='POST'>
+            {% csrf_token %}
+            <button type='submit' class="px-2 py-1 bg-red-500">Delete</button>
+          </form>
+        </div>
+        <div>
+          <span
+            class="px-3 py-1 rounded-full bg-blue-50 text-blue-600 text-sm"
+            >{{task.details.get_priority_display}}</span
+          >
+        </div>
+        <div class="flex -space-x-2">
+          {% for emp in task.assigned_to.all %}
+          <div
+          class="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white text-sm border-2 border-white"
+        >
+          {{emp.first_name|slice:':1'}}
+        </div>
+          {% endfor %}
+        </div>
+        <div class="text-gray-500">{{task.created_at|timesince}}</div>
+      </div>
+     {% endfor %}
+
+    </div>
+  </div>
+
+  {% endblock tasks %}
