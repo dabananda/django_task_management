@@ -16,24 +16,6 @@ from django.views.generic.base import ContextMixin
 from django.views.generic import ListView, DetailView, UpdateView
 
 
-# Class Based View Re-use example
-
-
-class Greetings(View):
-    greetings = 'Hello Everyone'
-
-    def get(self, request):
-        return HttpResponse(self.greetings)
-
-
-class HiGreetings(Greetings):
-    greetings = 'Hi Everyone'
-
-
-class HiHowGreetings(Greetings):
-    greetings = 'Hi Everyone, How are you'
-
-
 def is_manager(user):
     return user.groups.filter(name='Manager').exists()
 
@@ -44,21 +26,7 @@ def is_employee(user):
 
 @user_passes_test(is_manager, login_url='no-permission')
 def manager_dashboard(request):
-
-    # getting task count
-    # total_task = tasks.count()
-    # completed_task = Task.objects.filter(status="COMPLETED").count()
-    # in_progress_task = Task.objects.filter(status='IN_PROGRESS').count()
-    # pending_task = Task.objects.filter(status="PENDING").count()
-
-    # count = {
-    #     "total_task":
-    #     "completed_task":
-    #     "in_progress_task":
-    #     "pending_task":
-    # }
     type = request.GET.get('type', 'all')
-    # print(type)
 
     counts = Task.objects.aggregate(
         total=Count('id'),
@@ -66,8 +34,6 @@ def manager_dashboard(request):
         in_progress=Count('id', filter=Q(status='IN_PROGRESS')),
         pending=Count('id', filter=Q(status='PENDING')),
     )
-
-    # Retriving task data
 
     base_query = Task.objects.select_related(
         'details').prefetch_related('assigned_to')
@@ -97,8 +63,7 @@ def employee_dashboard(request):
 @login_required
 @permission_required("tasks.add_task", login_url='no-permission')
 def create_task(request):
-    # employees = Employee.objects.all()
-    task_form = TaskModelForm()  # For GET
+    task_form = TaskModelForm()
     task_detail_form = TaskDetailModelForm()
 
     if request.method == "POST":
@@ -120,22 +85,14 @@ def create_task(request):
     return render(request, "task_form.html", context)
 
 
-# variable for list of decorators
 create_decorators = [login_required, permission_required(
     "tasks.add_task", login_url='no-permission')]
 
 
 class CreateTask(ContextMixin, LoginRequiredMixin, PermissionRequiredMixin, View):
-    """ For creating task """
     permission_required = 'tasks.add_task'
     login_url = 'sign-in'
     template_name = 'task_form.html'
-
-    """ 
-    0. Create Task
-    1. LoginRequiredMixin
-    2. PermissionRequiredMixin
-    """
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -153,8 +110,6 @@ class CreateTask(ContextMixin, LoginRequiredMixin, PermissionRequiredMixin, View
         task_detail_form = TaskDetailModelForm(request.POST, request.FILES)
 
         if task_form.is_valid() and task_detail_form.is_valid():
-
-            """ For Model Form Data """
             task = task_form.save()
             task_detail = task_detail_form.save(commit=False)
             task_detail.task = task
@@ -170,7 +125,7 @@ class CreateTask(ContextMixin, LoginRequiredMixin, PermissionRequiredMixin, View
 @permission_required("tasks.change_task", login_url='no-permission')
 def update_task(request, id):
     task = Task.objects.get(id=id)
-    task_form = TaskModelForm(instance=task)  # For GET
+    task_form = TaskModelForm(instance=task)
 
     if task.details:
         task_detail_form = TaskDetailModelForm(instance=task.details)
@@ -181,8 +136,6 @@ def update_task(request, id):
             request.POST, request.Files, instance=task.details)
 
         if task_form.is_valid() and task_detail_form.is_valid():
-
-            """ For Model Form Data """
             task = task_form.save()
             task_detail = task_detail_form.save(commit=False)
             task_detail.task = task
@@ -205,7 +158,6 @@ class UpdateTask(UpdateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['task_form'] = self.get_form()
-        # print(context)
         if hasattr(self.object, 'details') and self.object.details:
             context['task_detail_form'] = TaskDetailModelForm(
                 instance=self.object.details)
@@ -222,8 +174,6 @@ class UpdateTask(UpdateView):
             request.POST, request.FILES, instance=getattr(self.object, 'details', None))
 
         if task_form.is_valid() and task_detail_form.is_valid():
-
-            """ For Model Form Data """
             task = task_form.save()
             task_detail = task_detail_form.save(commit=False)
             task_detail.task = task
@@ -279,7 +229,6 @@ def task_details(request, task_id):
 
     if request.method == 'POST':
         selected_status = request.POST.get('task_status')
-        # print(selected_status)
         task.status = selected_status
         task.save()
         return redirect('task-details', task.id)
@@ -294,8 +243,7 @@ class TaskDetail(DetailView):
     pk_url_kwarg = 'task_id'
 
     def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)  # {"task": task}
-        # {"task": task, 'status_choices': status_choices}
+        context = super().get_context_data(**kwargs)
         context['status_choices'] = Task.STATUS_CHOICES
         return context
 
