@@ -15,37 +15,6 @@ from django.contrib.auth import get_user_model
 
 User = get_user_model()
 
-# Create your views here.
-
-# Test for users
-"""
-class EditProfileView(UpdateView):
-    model = User
-    form_class = EditProfileForm
-    template_name = 'accounts/update_profile.html'
-    context_object_name = 'form'
-
-    def get_object(self):
-        return self.request.user
-
-    def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
-        kwargs['userprofile'] = UserProfile.objects.get(user=self.request.user)
-        return kwargs
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        user_profile = UserProfile.objects.get(user=self.request.user)
-        print("views", user_profile)
-        context['form'] = self.form_class(
-            instance=self.object, userprofile=user_profile)
-        return context
-
-    def form_valid(self, form):
-        form.save(commit=True)
-        return redirect('profile')
-"""
-
 
 class EditProfileView(UpdateView):
     model = User
@@ -133,8 +102,6 @@ def admin_dashboard(request):
     users = User.objects.prefetch_related(
         Prefetch('groups', queryset=Group.objects.all(), to_attr='all_groups')
     ).all()
-
-    # print(users)
 
     for user in users:
         if user.all_groups:
@@ -229,18 +196,3 @@ class CustomPasswordResetConfirmView(PasswordResetConfirmView):
         messages.success(
             self.request, 'Password reset successfully')
         return super().form_valid(form)
-
-
-""" 
-
-    Admin
-        - Sobkisui
-    Manager
-        - project
-        - task create
-    Employee
-        - Task read
-        - Task update
-    
-    Role Based Access Control (RBAC)
-"""
